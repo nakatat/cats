@@ -1,0 +1,67 @@
+{
+    "$schema": "https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainer.base.schema.json",
+    "name": "新琴似CATS Dev Container",
+    "dockerComposeFile": "../compose.yaml",
+    "service": "workspace",
+    "runServices": ["postgres", "workspace"],
+    "workspaceFolder": "/workspace",
+    "shutdownAction": "stopCompose",
+    "overrideCommand": false,
+    "remoteUser": "vscode",
+    "forwardPorts": [3000, 6006, 8081],
+    "portsAttributes": {
+        "3000": {
+            "label": "Next.js",
+            "onAutoForward": "openBrowser"
+        },
+        "6006": {
+            "label": "Storybook",
+            "onAutoForward": "notify"
+        },
+        "8081": {
+            "label": "Spring Boot API",
+            "onAutoForward": "notify"
+        }
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/node:1": {
+            "version": "22",
+            "nodeGypDependencies": true,
+            "pnpmVersion": "10.15.0"
+        },
+        "ghcr.io/devcontainers/features/java:1": {
+            "version": "21",
+            "installMaven": "true"
+        }
+    },
+    "containerEnv": {
+        "API_BASE_URL": "http://localhost:8081/api",
+        "DEFAULT_TEAM_SLUG": "cats",
+        "TZ": "Asia/Tokyo",
+        "SERVER_PORT": "8081",
+        "DATABASE_URL": "jdbc:postgresql://postgres:5432/cats_api",
+        "DATABASE_USERNAME": "cats",
+        "DATABASE_PASSWORD": "cats",
+        "MAVEN_OPTS": "-Dmaven.repo.local=/home/vscode/.m2"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "dbaeumer.vscode-eslint",
+                "esbenp.prettier-vscode",
+                "bradlc.vscode-tailwindcss",
+                "vscjava.vscode-java-pack",
+                "vscjava.vscode-maven",
+                "vmware.vscode-boot-dev-pack",
+                "ms-azuretools.vscode-docker",
+                "smulyono.reveal",
+                "yzhang.markdown-all-in-one",
+                "mhutchie.git-graph",
+                "github.vscode-github-actions"
+            ],
+            "settings": {
+                "java.configuration.updateBuildConfiguration": "automatic"
+            }
+        }
+    }
+}

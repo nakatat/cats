@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dev.baseballscore.cats.api.game.mapper.GameMapper">
+
+    <resultMap id="GameRowMap" type="dev.baseballscore.cats.api.game.mapper.model.GameRow">
+        <id column="id" property="id"/>
+        <result column="team_id" property="teamId"/>
+        <result column="season_id" property="seasonId"/>
+        <result column="season_year" property="seasonYear"/>
+        <result column="tournament_id" property="tournamentId"/>
+        <result column="tournament_name" property="tournamentName"/>
+        <result column="stadium_id" property="stadiumId"/>
+        <result column="stadium_name" property="stadiumName"/>
+        <result column="game_date" property="gameDate"/>
+        <result column="start_time" property="startTime"/>
+        <result column="opponent_name" property="opponentName"/>
+        <result column="home_away" property="homeAway"/>
+        <result column="game_type" property="gameType"/>
+        <result column="status" property="status"/>
+        <result column="inning_score_status" property="inningScoreStatus"/>
+        <result column="runs_for" property="runsFor"/>
+        <result column="runs_against" property="runsAgainst"/>
+        <result column="result" property="result"/>
+        <result column="venue_name" property="venueName"/>
+        <result column="note" property="note"/>
+    </resultMap>
+
+    <sql id="GameSelectColumns">
+        g.id,
+        g.team_id,
+        g.season_id,
+        s.year AS season_year,
+        g.tournament_id,
+        t.name AS tournament_name,
+        g.stadium_id,
+        COALESCE(st.name, g.venue_name) AS stadium_name,
+        g.game_date,
+        g.start_time,
+        g.opponent_name,
+        g.home_away,
+        g.game_type,
+        g.status,
+        g.inning_score_status,
+        g.runs_for,
+        g.runs_against,
+        g.result,
+        g.venue_name,
+        g.note
+    </sql>
+
+    <select id="findGamesByTeamId" resultMap="GameRowMap">
+        SELECT
+        <include refid="GameSelectColumns"/>
+        FROM games g
+            INNER JOIN seasons s ON s.id = g.season_id
+            LEFT JOIN tournaments t ON t.id = g.tournament_id
+            LEFT JOIN stadiums st ON st.id = g.stadium_id
+        WHERE g.team_id = #{teamId}
+        <if test="seasonYear != null">
+            AND s.year = #{seasonYear}
+        </if>
+        <if test="status != null and status != ''">
+            AND g.status = #{status}
+        </if>
+        ORDER BY g.game_date DESC, g.id DESC
+    </select>
+
+    <select id="findGameByTeamIdAndGameId" resultMap="GameRowMap">
+        SELECT
+        <include refid="GameSelectColumns"/>
+        FROM games g
+            INNER JOIN seasons s ON s.id = g.season_id
+            LEFT JOIN tournaments t ON t.id = g.tournament_id
+            LEFT JOIN stadiums st ON st.id = g.stadium_id
+        WHERE g.team_id = #{teamId}
+          AND g.id = #{gameId}
+    </select>
+</mapper>

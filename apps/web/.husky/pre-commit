@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+set -e
+
+repository_root=$(git rev-parse --show-toplevel)
+exec pnpm --dir "$repository_root/apps/web" exec lint-staged \
+  --cwd "$repository_root" \
+  --config "$repository_root/apps/web/.lintstagedrc.mjs"

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dev.baseballscore.cats.api.stats.pitching.mapper.PitchingStatsMapper">
+
+  <resultMap
+      id="PitchingStatsRowMap"
+      type="dev.baseballscore.cats.api.stats.pitching.mapper.model.PitchingStatsRow">
+    <result column="player_id" property="playerId"/>
+    <result column="display_name" property="displayName"/>
+    <result column="profile_image_url" property="profileImageUrl"/>
+    <result column="uniform_number" property="uniformNumber"/>
+    <result column="guest" property="guest"/>
+    <result column="games" property="games"/>
+    <result column="outs_pitched" property="outsPitched"/>
+    <result column="batters_faced" property="battersFaced"/>
+    <result column="pitches" property="pitches"/>
+    <result column="hits_allowed" property="hitsAllowed"/>
+    <result column="home_runs_allowed" property="homeRunsAllowed"/>
+    <result column="runs_allowed" property="runsAllowed"/>
+    <result column="earned_runs" property="earnedRuns"/>
+    <result column="walks" property="walks"/>
+    <result column="hit_by_pitch" property="hitByPitch"/>
+    <result column="strikeouts" property="strikeouts"/>
+    <result column="wins" property="wins"/>
+    <result column="losses" property="losses"/>
+    <result column="saves" property="saves"/>
+    <result column="holds" property="holds"/>
+  </resultMap>
+
+  <select id="aggregatePitchingStatsByTeamId" resultMap="PitchingStatsRowMap">
+    SELECT
+      MIN(pl.player_id) AS player_id,
+      MAX(COALESCE(p.name, gp.display_name)) AS display_name,
+      MAX(p.profile_image_url) AS profile_image_url,
+      MAX(gp.uniform_number) AS uniform_number,
+      BOOL_OR(gp.is_guest) AS guest,
+      COUNT(DISTINCT pl.game_id)::int AS games,
+      COALESCE(SUM(pl.outs_pitched), 0)::int AS outs_pitched,
+      COALESCE(SUM(pl.batters_faced), 0)::int AS batters_faced,
+      COALESCE(SUM(pl.pitches), 0)::int AS pitches,
+      COALESCE(SUM(pl.hits_allowed), 0)::int AS hits_allowed,
+      COALESCE(SUM(pl.home_runs_allowed), 0)::int AS home_runs_allowed,
+      COALESCE(SUM(pl.runs_allowed), 0)::int AS runs_allowed,
+      COALESCE(SUM(pl.earned_runs), 0)::int AS earned_runs,
+      COALESCE(SUM(pl.walks), 0)::int AS walks,
+      COALESCE(SUM(pl.hit_by_pitch), 0)::int AS hit_by_pitch,
+      COALESCE(SUM(pl.strikeouts), 0)::int AS strikeouts,
+      COALESCE(SUM(pl.wins), 0)::int AS wins,
+      COALESCE(SUM(pl.losses), 0)::int AS losses,
+      COALESCE(SUM(pl.saves), 0)::int AS saves,
+      COALESCE(SUM(pl.holds), 0)::int AS holds
+    FROM pitching_lines pl
+      INNER JOIN game_participants gp
+        ON gp.id = pl.game_participant_id
+       AND gp.game_id = pl.game_id
+       AND gp.team_id = pl.team_id
+      INNER JOIN games g
+        ON g.id = pl.game_id
+       AND g.team_id = pl.team_id
+      INNER JOIN seasons s
+        ON s.id = g.season_id
+       AND s.team_id = pl.team_id
+      LEFT JOIN players p
+        ON p.id = pl.player_id
+    WHERE pl.team_id = #{teamId}
+      AND g.status = #{status}
+      <if test="seasonYear != null">
+        AND s.year = #{seasonYear}
+      </if>
+      <if test="tournamentId != null">
+        AND g.tournament_id = #{tournamentId}
+      </if>
+      <if test="!includeGuests">
+        AND gp.is_guest = FALSE
+      </if>
+    GROUP BY
+      CASE
+        WHEN pl.player_id IS NULL THEN 'guest:' || gp.display_name
+        ELSE 'player:' || pl.player_id::text
+      END
+    ORDER BY
+      CASE
+        WHEN pl.player_id IS NULL THEN 'guest:' || gp.display_name
+        ELSE 'player:' || pl.player_id::text
+      END
+  </select>
+</mapper>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dev.baseballscore.cats.api.ranking.mapper.RankingMapper">
+
+    <select id="countGamesForPlateAppearanceQualification" resultType="int">
+        SELECT COUNT(*)
+        FROM games g
+            INNER JOIN teams t ON t.id = g.team_id
+            INNER JOIN seasons s ON s.id = g.season_id
+        WHERE t.slug = #{teamSlug}
+          AND t.is_active = true
+          AND t.deleted_at IS NULL
+          AND s.team_id = g.team_id
+          <if test="seasonYear != null">
+              AND s.year = #{seasonYear}
+          </if>
+          <if test="tournamentId != null">
+              AND g.tournament_id = #{tournamentId}
+          </if>
+          AND g.status = #{status}
+    </select>
+</mapper>

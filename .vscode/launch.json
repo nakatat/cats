@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-cats-api",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/apps/api",
+            "mainClass": "dev.baseballscore.cats.api.CatsApiApplication",
+            "projectName": "cats-api",
+            "args": "",
+            "envFile": "${workspaceFolder}/apps/api/.env"
+        }
+    ]
+}

@@ -1,0 +1,9 @@
+{
+  "properties": [
+    {
+      "name": "app.cors.allowed-origins",
+      "type": "java.lang.String",
+      "description": "カンマ区切りで指定する許可済みOriginの一覧。"
+    }
+  ]
+}

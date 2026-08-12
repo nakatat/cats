@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dev.baseballscore.cats.api.pitchingline.mapper.PitchingLineMapper">
+
+    <resultMap id="PitchingLineRowMap" type="dev.baseballscore.cats.api.pitchingline.mapper.model.PitchingLineRow">
+        <id column="pitching_line_id" property="pitchingLineId"/>
+        <result column="game_participant_id" property="gameParticipantId"/>
+        <result column="game_id" property="gameId"/>
+        <result column="team_id" property="teamId"/>
+        <result column="player_id" property="playerId"/>
+        <result column="display_name" property="displayName"/>
+        <result column="uniform_number" property="uniformNumber"/>
+        <result column="pitching_order" property="pitchingOrder"/>
+        <result column="guest" property="guest"/>
+        <result column="outs_pitched" property="outsPitched"/>
+        <result column="batters_faced" property="battersFaced"/>
+        <result column="pitches" property="pitches"/>
+        <result column="hits_allowed" property="hitsAllowed"/>
+        <result column="home_runs_allowed" property="homeRunsAllowed"/>
+        <result column="runs_allowed" property="runsAllowed"/>
+        <result column="earned_runs" property="earnedRuns"/>
+        <result column="walks" property="walks"/>
+        <result column="hit_by_pitch" property="hitByPitch"/>
+        <result column="strikeouts" property="strikeouts"/>
+        <result column="wins" property="wins"/>
+        <result column="losses" property="losses"/>
+        <result column="saves" property="saves"/>
+        <result column="holds" property="holds"/>
+    </resultMap>
+
+    <select id="findPitchingLinesByGameIdAndTeamId" resultMap="PitchingLineRowMap">
+        SELECT
+        pl.id AS pitching_line_id,
+        pl.game_participant_id,
+        pl.game_id,
+        pl.team_id,
+        pl.player_id,
+        gp.display_name,
+        gp.uniform_number,
+        pl.pitching_order,
+        gp.is_guest AS guest,
+        pl.outs_pitched,
+        pl.batters_faced,
+        pl.pitches,
+        pl.hits_allowed,
+        pl.home_runs_allowed,
+        pl.runs_allowed,
+        pl.earned_runs,
+        pl.walks,
+        pl.hit_by_pitch,
+        pl.strikeouts,
+        pl.wins,
+        pl.losses,
+        pl.saves,
+        pl.holds
+        FROM pitching_lines pl
+            INNER JOIN game_participants gp
+                ON gp.id = pl.game_participant_id
+               AND gp.game_id = pl.game_id
+               AND gp.team_id = pl.team_id
+            INNER JOIN games g
+                ON g.id = pl.game_id
+               AND g.team_id = pl.team_id
+        WHERE pl.team_id = #{teamId}
+          AND pl.game_id = #{gameId}
+        ORDER BY pl.pitching_order NULLS LAST, pl.id ASC
+    </select>
+</mapper>

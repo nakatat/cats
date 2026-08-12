@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: cats-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: cats_api
+      POSTGRES_USER: cats
+      POSTGRES_PASSWORD: cats
+      TZ: Asia/Tokyo
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cats -d cats_api"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres_data:/var/lib/postgresql
+
+  workspace:
+    image: mcr.microsoft.com/devcontainers/base:bookworm
+    container_name: cats-workspace
+    working_dir: /workspace
+    environment:
+      API_BASE_URL: http://localhost:8081/api
+      DEFAULT_TEAM_SLUG: cats
+      TZ: Asia/Tokyo
+      SERVER_PORT: 8081
+      DATABASE_URL: jdbc:postgresql://postgres:5432/cats_api
+      DATABASE_USERNAME: cats
+      DATABASE_PASSWORD: cats
+      MAVEN_OPTS: -Dmaven.repo.local=/home/vscode/.m2
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - .:/workspace
+      - web_node_modules:/workspace/apps/web/node_modules
+      - api_m2:/home/vscode/.m2
+      - web_next:/workspace/apps/web/.next
+    command: ["bash", "-lc", "bash .devcontainer/workspace-entrypoint.sh"]
+
+volumes:
+  postgres_data:
+  api_m2:
+  web_node_modules:
+  web_next:

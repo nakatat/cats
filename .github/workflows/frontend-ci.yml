@@ -1,0 +1,250 @@
+name: Frontend CI
+
+on:
+    push:
+        paths:
+            - "apps/web/**"
+            - "apps/api/**"
+            - "compose.yaml"
+            - ".github/workflows/frontend-ci.yml"
+    pull_request:
+        paths:
+            - "apps/web/**"
+            - "apps/api/**"
+            - "compose.yaml"
+            - ".github/workflows/frontend-ci.yml"
+
+permissions:
+    contents: read
+
+concurrency:
+    group: frontend-ci-${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    frontend-quality:
+        name: Frontend quality
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: apps/web
+        steps:
+            - name: Check out repository
+              uses: actions/checkout@v6
+
+            - name: Set up pnpm
+              uses: pnpm/action-setup@v6
+              with:
+                  version: 10.15.0
+
+            - name: Set up Node.js 22
+              uses: actions/setup-node@v6
+              with:
+                  node-version: "22"
+                  package-manager-cache: false
+
+            - name: Get pnpm store path
+              id: pnpm-store-path
+              working-directory: apps/web
+              run: |
+                  store_path="$(pnpm store path --silent)"
+                  mkdir -p "$store_path"
+                  echo "pnpm store path: $store_path"
+                  echo "path=$store_path" >> "$GITHUB_OUTPUT"
+
+            - name: Cache pnpm store
+              uses: actions/cache@v5
+              with:
+                  path: ${{ steps.pnpm-store-path.outputs.path }}
+                  key: ${{ runner.os }}-pnpm-store-pnpm-10.15.0-${{ hashFiles('apps/web/pnpm-lock.yaml') }}
+                  restore-keys: |
+                      ${{ runner.os }}-pnpm-store-pnpm-10.15.0-
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Check formatting
+              run: pnpm format:check
+
+            - name: Run lint
+              run: pnpm lint
+
+            - name: Run typecheck
+              run: pnpm typecheck
+
+            - name: Run unit tests
+              run: pnpm test
+
+            - name: Build Next.js
+              if: ${{ github.event_name != 'push' || github.ref != 'refs/heads/main' }}
+              run: pnpm build
+
+    frontend-component:
+        name: Frontend component test
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: apps/web
+        steps:
+            - name: Check out repository
+              uses: actions/checkout@v6
+
+            - name: Set up pnpm
+              uses: pnpm/action-setup@v6
+              with:
+                  version: 10.15.0
+
+            - name: Set up Node.js 22
+              uses: actions/setup-node@v6
+              with:
+                  node-version: "22"
+                  package-manager-cache: false
+
+            - name: Get pnpm store path
+              id: pnpm-store-path
+              working-directory: apps/web
+              run: |
+                  store_path="$(pnpm store path --silent)"
+                  mkdir -p "$store_path"
+                  echo "pnpm store path: $store_path"
+                  echo "path=$store_path" >> "$GITHUB_OUTPUT"
+
+            - name: Cache pnpm store
+              uses: actions/cache@v5
+              with:
+                  path: ${{ steps.pnpm-store-path.outputs.path }}
+                  key: ${{ runner.os }}-pnpm-store-pnpm-10.15.0-${{ hashFiles('apps/web/pnpm-lock.yaml') }}
+                  restore-keys: |
+                      ${{ runner.os }}-pnpm-store-pnpm-10.15.0-
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Install Chromium and system dependencies
+              run: pnpm exec playwright install --with-deps chromium
+
+            - name: Run Storybook Component Test
+              run: pnpm test:storybook
+
+            - name: Build Storybook
+              run: pnpm build-storybook
+
+    frontend-e2e:
+        name: Frontend E2E
+        runs-on: ubuntu-latest
+        env:
+            DATABASE_USERNAME: cats
+            DATABASE_PASSWORD: cats
+            E2E_DATABASE_URL: jdbc:postgresql://localhost:5432/cats_api
+            E2E_API_BASE_URL: http://localhost:8081/api
+            E2E_BASE_URL: http://localhost:3000
+        services:
+            postgres:
+                image: postgres:18-alpine
+                env:
+                    POSTGRES_DB: cats_api
+                    POSTGRES_USER: cats
+                    POSTGRES_PASSWORD: cats
+                    TZ: Asia/Tokyo
+                ports:
+                    - 5432:5432
+                options: >-
+                    --health-cmd "pg_isready -U cats -d cats_api"
+                    --health-interval 5s
+                    --health-timeout 5s
+                    --health-retries 10
+        defaults:
+            run:
+                working-directory: apps/web
+        steps:
+            - name: Check out repository
+              uses: actions/checkout@v6
+
+            - name: Set up Java 21
+              uses: actions/setup-java@v5
+              with:
+                  distribution: temurin
+                  java-version: "21"
+                  cache: maven
+                  cache-dependency-path: apps/api/pom.xml
+
+            - name: Set up pnpm
+              uses: pnpm/action-setup@v6
+              with:
+                  version: 10.15.0
+
+            - name: Set up Node.js 22
+              uses: actions/setup-node@v6
+              with:
+                  node-version: "22"
+                  package-manager-cache: false
+
+            - name: Get pnpm store path
+              id: pnpm-store-path
+              working-directory: apps/web
+              run: |
+                  store_path="$(pnpm store path --silent)"
+                  mkdir -p "$store_path"
+                  echo "pnpm store path: $store_path"
+                  echo "path=$store_path" >> "$GITHUB_OUTPUT"
+
+            - name: Cache pnpm store
+              uses: actions/cache@v5
+              with:
+                  path: ${{ steps.pnpm-store-path.outputs.path }}
+                  key: ${{ runner.os }}-pnpm-store-pnpm-10.15.0-${{ hashFiles('apps/web/pnpm-lock.yaml') }}
+                  restore-keys: |
+                      ${{ runner.os }}-pnpm-store-pnpm-10.15.0-
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Install Chromium and system dependencies
+              run: pnpm exec playwright install --with-deps chromium
+
+            - name: Run Playwright E2E
+              run: pnpm test:e2e
+
+            - name: Upload Playwright artifacts on failure
+              if: ${{ failure() }}
+              uses: actions/upload-artifact@v6
+              with:
+                  name: playwright-test-results
+                  path: apps/web/test-results/
+                  if-no-files-found: ignore
+                  retention-days: 7
+
+    deploy:
+        name: Deploy to Vercel Production
+        needs:
+            - frontend-quality
+            - frontend-component
+            - frontend-e2e
+        if: ${{ github.ref == 'refs/heads/main' && needs.frontend-quality.result == 'success' && needs.frontend-component.result == 'success' && needs.frontend-e2e.result == 'success' }}
+        runs-on: ubuntu-latest
+        env:
+            VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+            VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+            VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        steps:
+            - name: Check out repository
+              uses: actions/checkout@v6
+
+            - name: Set up pnpm
+              uses: pnpm/action-setup@v6
+              with:
+                  version: 10.15.0
+
+            - name: Set up Node.js 22
+              uses: actions/setup-node@v6
+              with:
+                  node-version: "22"
+                  package-manager-cache: false
+            - name: Pull Vercel production environment information
+              run: pnpm dlx vercel@latest pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+            - name: Build Vercel production artifacts
+              run: pnpm dlx vercel@latest build --prod --token="$VERCEL_TOKEN"
+
+            - name: Deploy Vercel production artifacts
+              run: pnpm dlx vercel@latest deploy --prebuilt --prod --token="$VERCEL_TOKEN"

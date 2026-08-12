@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dev.baseballscore.cats.api.team.mapper.TeamMapper">
+
+    <resultMap id="TeamRowMap" type="dev.baseballscore.cats.api.team.mapper.model.TeamRow">
+        <id column="id" property="id"/>
+        <result column="slug" property="slug"/>
+        <result column="name" property="name"/>
+        <result column="short_name" property="shortName"/>
+        <result column="area" property="area"/>
+        <result column="founded_year" property="foundedYear"/>
+        <result column="description" property="description"/>
+        <result column="logo_url" property="logoUrl"/>
+        <result column="main_image_url" property="mainImageUrl"/>
+        <result column="is_active" property="active"/>
+    </resultMap>
+
+    <resultMap id="SeasonRowMap" type="dev.baseballscore.cats.api.team.mapper.model.SeasonRow">
+        <id column="id" property="id"/>
+        <result column="year" property="year"/>
+        <result column="name" property="name"/>
+        <result column="start_date" property="startDate"/>
+        <result column="end_date" property="endDate"/>
+        <result column="is_current" property="current"/>
+    </resultMap>
+
+    <select id="findActiveTeamBySlug" resultMap="TeamRowMap">
+        SELECT
+            id,
+            slug,
+            name,
+            short_name,
+            area,
+            founded_year,
+            description,
+            logo_url,
+            main_image_url,
+            is_active
+        FROM teams
+        WHERE slug = #{slug}
+          AND is_active = TRUE
+          AND deleted_at IS NULL
+    </select>
+
+    <select id="findSeasonsByTeamId" resultMap="SeasonRowMap">
+        SELECT
+            id,
+            year,
+            name,
+            start_date,
+            end_date,
+            is_current
+        FROM seasons
+        WHERE team_id = #{teamId}
+        ORDER BY year DESC, id DESC
+    </select>
+</mapper>

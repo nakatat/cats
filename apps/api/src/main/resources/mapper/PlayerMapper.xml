@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dev.baseballscore.cats.api.player.mapper.PlayerMapper">
+
+    <resultMap id="PlayerRowMap" type="dev.baseballscore.cats.api.player.mapper.model.PlayerRow">
+        <id column="id" property="id"/>
+        <result column="team_id" property="teamId"/>
+        <result column="name" property="name"/>
+        <result column="kana" property="kana"/>
+        <result column="uniform_number" property="uniformNumber"/>
+        <result column="primary_position" property="primaryPosition"/>
+        <result column="throwing_hand" property="throwingHand"/>
+        <result column="batting_hand" property="battingHand"/>
+        <result column="joined_at" property="joinedAt"/>
+        <result column="left_at" property="leftAt"/>
+        <result column="profile_image_url" property="profileImageUrl"/>
+        <result column="description" property="description"/>
+    </resultMap>
+
+    <select id="findPlayersByTeamId" resultMap="PlayerRowMap">
+        SELECT
+            id,
+            team_id,
+            name,
+            kana,
+            uniform_number,
+            primary_position,
+            throwing_hand,
+            batting_hand,
+            joined_at,
+            left_at,
+            profile_image_url,
+            description
+        FROM players
+        WHERE team_id = #{teamId}
+        <choose>
+            <when test="active != null and active">
+                AND left_at IS NULL
+            </when>
+            <when test="active != null and !active">
+                AND left_at IS NOT NULL
+            </when>
+        </choose>
+        ORDER BY
+            CASE WHEN left_at IS NULL THEN 0 ELSE 1 END,
+            CASE WHEN uniform_number ~ '^[0-9]+$' THEN 0 ELSE 1 END,
+            CASE WHEN uniform_number ~ '^[0-9]+$' THEN uniform_number::int END,
+            uniform_number ASC,
+            id ASC
+    </select>
+
+    <select id="findPlayerByTeamIdAndPlayerId" resultMap="PlayerRowMap">
+        SELECT
+            id,
+            team_id,
+            name,
+            kana,
+            uniform_number,
+            primary_position,
+            throwing_hand,
+            batting_hand,
+            joined_at,
+            left_at,
+            profile_image_url,
+            description
+        FROM players
+        WHERE team_id = #{teamId}
+          AND id = #{playerId}
+    </select>
+</mapper>

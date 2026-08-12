@@ -1,0 +1,98 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@source '../../.storybook';
+
+:root {
+  --background: oklch(0.985 0.005 110);
+  --foreground: oklch(0.18 0.025 145);
+
+  --card: oklch(1 0 0);
+  --card-foreground: var(--foreground);
+
+  --popover: oklch(1 0 0);
+  --popover-foreground: var(--foreground);
+
+  --primary: oklch(0.26 0.075 155);
+  --primary-foreground: oklch(0.985 0 0);
+
+  --secondary: oklch(0.83 0.17 88);
+  --secondary-foreground: oklch(0.2 0.035 120);
+
+  --muted: oklch(0.95 0.012 115);
+  --muted-foreground: oklch(0.46 0.035 145);
+
+  --accent: oklch(0.48 0.12 190);
+  --accent-foreground: oklch(1 0 0);
+
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(1 0 0);
+
+  --border: oklch(0.88 0.018 115);
+  --input: oklch(0.88 0.018 115);
+  --ring: var(--primary);
+
+  --font-family-sans:
+    var(--font-noto-sans-jp, 'Noto Sans JP'), 'Noto Sans JP',
+    'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', sans-serif;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --font-sans: var(--font-family-sans);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+    outline-color: color-mix(in oklch, var(--ring) 50%, transparent);
+  }
+
+  html {
+    --site-header-height: 4rem;
+    scroll-behavior: smooth;
+    scroll-padding-top: var(--site-header-height);
+    font-family: var(--font-family-sans);
+  }
+
+  @media (min-width: 768px) {
+    html {
+      --site-header-height: 5rem;
+    }
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-family-sans);
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}
+
+body:has(.site-shell [data-page='home']),
+.site-shell:has([data-page='home']) {
+  background-color: var(--primary);
+}

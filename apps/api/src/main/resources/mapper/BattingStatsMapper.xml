@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dev.baseballscore.cats.api.stats.batting.mapper.BattingStatsMapper">
+
+  <resultMap
+      id="BattingStatsRowMap"
+      type="dev.baseballscore.cats.api.stats.batting.mapper.model.BattingStatsRow">
+    <result column="player_id" property="playerId"/>
+    <result column="display_name" property="displayName"/>
+    <result column="profile_image_url" property="profileImageUrl"/>
+    <result column="uniform_number" property="uniformNumber"/>
+    <result column="guest" property="guest"/>
+    <result column="games" property="games"/>
+    <result column="plate_appearances" property="plateAppearances"/>
+    <result column="at_bats" property="atBats"/>
+    <result column="hits" property="hits"/>
+    <result column="doubles" property="doubles"/>
+    <result column="triples" property="triples"/>
+    <result column="home_runs" property="homeRuns"/>
+    <result column="runs_batted_in" property="runsBattedIn"/>
+    <result column="runs" property="runs"/>
+    <result column="walks" property="walks"/>
+    <result column="hit_by_pitch" property="hitByPitch"/>
+    <result column="strikeouts" property="strikeouts"/>
+    <result column="sacrifice_hits" property="sacrificeHits"/>
+    <result column="sacrifice_flies" property="sacrificeFlies"/>
+    <result column="stolen_bases" property="stolenBases"/>
+    <result column="caught_stealing" property="caughtStealing"/>
+    <result column="reached_on_errors" property="reachedOnErrors"/>
+  </resultMap>
+
+  <select id="aggregateBattingStatsByTeamId" resultMap="BattingStatsRowMap">
+    SELECT
+      MIN(bl.player_id) AS player_id,
+      MAX(COALESCE(p.name, gp.display_name)) AS display_name,
+      MAX(p.profile_image_url) AS profile_image_url,
+      MAX(gp.uniform_number) AS uniform_number,
+      BOOL_OR(gp.is_guest) AS guest,
+      COUNT(DISTINCT bl.game_id)::int AS games,
+      COALESCE(SUM(bl.plate_appearances), 0)::int AS plate_appearances,
+      COALESCE(SUM(bl.at_bats), 0)::int AS at_bats,
+      COALESCE(SUM(bl.hits), 0)::int AS hits,
+      COALESCE(SUM(bl.doubles), 0)::int AS doubles,
+      COALESCE(SUM(bl.triples), 0)::int AS triples,
+      COALESCE(SUM(bl.home_runs), 0)::int AS home_runs,
+      COALESCE(SUM(bl.runs_batted_in), 0)::int AS runs_batted_in,
+      COALESCE(SUM(bl.runs), 0)::int AS runs,
+      COALESCE(SUM(bl.walks), 0)::int AS walks,
+      COALESCE(SUM(bl.hit_by_pitch), 0)::int AS hit_by_pitch,
+      COALESCE(SUM(bl.strikeouts), 0)::int AS strikeouts,
+      COALESCE(SUM(bl.sacrifice_hits), 0)::int AS sacrifice_hits,
+      COALESCE(SUM(bl.sacrifice_flies), 0)::int AS sacrifice_flies,
+      COALESCE(SUM(bl.stolen_bases), 0)::int AS stolen_bases,
+      COALESCE(SUM(bl.caught_stealing), 0)::int AS caught_stealing,
+      COALESCE(SUM(bl.reached_on_errors), 0)::int AS reached_on_errors
+    FROM batting_lines bl
+      INNER JOIN game_participants gp
+        ON gp.id = bl.game_participant_id
+       AND gp.game_id = bl.game_id
+       AND gp.team_id = bl.team_id
+      INNER JOIN games g
+        ON g.id = bl.game_id
+       AND g.team_id = bl.team_id
+      INNER JOIN seasons s
+        ON s.id = g.season_id
+       AND s.team_id = bl.team_id
+      LEFT JOIN players p
+        ON p.id = bl.player_id
+    WHERE bl.team_id = #{teamId}
+      AND g.status = #{status}
+      <if test="seasonYear != null">
+        AND s.year = #{seasonYear}
+      </if>
+      <if test="tournamentId != null">
+        AND g.tournament_id = #{tournamentId}
+      </if>
+      <if test="!includeGuests">
+        AND gp.is_guest = FALSE
+      </if>
+    GROUP BY
+      CASE
+        WHEN bl.player_id IS NULL THEN 'guest:' || gp.display_name
+        ELSE 'player:' || bl.player_id::text
+      END
+  </select>
+</mapper>

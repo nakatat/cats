@@ -1,0 +1,12 @@
+.git
+.idea
+.next
+.turbo
+coverage
+dist
+node_modules
+*.log
+.env
+.env.*
+Dockerfile
+.dockerignore

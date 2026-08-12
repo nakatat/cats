@@ -1,0 +1,10 @@
+.next
+next-env.d.ts
+.turbo
+.pnpm-store
+coverage
+dist
+node_modules
+pnpm-lock.yaml
+storybook-static
+test-results

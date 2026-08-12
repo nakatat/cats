@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dev.baseballscore.cats.api.teamsummary.TeamSummaryMapper">
+
+    <resultMap id="SeasonRowMap" type="dev.baseballscore.cats.api.team.mapper.model.SeasonRow">
+        <id column="id" property="id"/>
+        <result column="year" property="year"/>
+        <result column="name" property="name"/>
+        <result column="start_date" property="startDate"/>
+        <result column="end_date" property="endDate"/>
+        <result column="is_current" property="current"/>
+    </resultMap>
+
+    <resultMap id="SummaryRecordRowMap" type="dev.baseballscore.cats.api.teamsummary.mapper.model.SummaryRecordRow">
+        <result column="games" property="games"/>
+        <result column="wins" property="wins"/>
+        <result column="losses" property="losses"/>
+        <result column="draws" property="draws"/>
+        <result column="runs_for" property="runsFor"/>
+        <result column="runs_against" property="runsAgainst"/>
+    </resultMap>
+
+    <resultMap id="SummaryGameRowMap" type="dev.baseballscore.cats.api.teamsummary.mapper.model.SummaryGameRow">
+        <id column="game_id" property="gameId"/>
+        <result column="game_date" property="gameDate"/>
+        <result column="start_time" property="startTime"/>
+        <result column="opponent_name" property="opponentName"/>
+        <result column="status" property="status"/>
+        <result column="result" property="result"/>
+        <result column="runs_for" property="runsFor"/>
+        <result column="runs_against" property="runsAgainst"/>
+        <result column="tournament_id" property="tournamentId"/>
+        <result column="tournament_name" property="tournamentName"/>
+        <result column="stadium_id" property="stadiumId"/>
+        <result column="stadium_name" property="stadiumName"/>
+        <result column="venue_name" property="venueName"/>
+    </resultMap>
+
+    <select id="findCurrentSeasonByTeamId" resultMap="SeasonRowMap">
+        SELECT
+            id,
+            year,
+            name,
+            start_date,
+            end_date,
+            is_current
+        FROM seasons
+        WHERE team_id = #{teamId}
+          AND is_current = TRUE
+        ORDER BY year DESC, id DESC
+        LIMIT 1
+    </select>
+
+    <select id="findSeasonByTeamIdAndYear" resultMap="SeasonRowMap">
+        SELECT
+            id,
+            year,
+            name,
+            start_date,
+            end_date,
+            is_current
+        FROM seasons
+        WHERE team_id = #{teamId}
+          AND year = #{seasonYear}
+        ORDER BY id DESC
+        LIMIT 1
+    </select>
+
+    <select id="findLatestSeasonByTeamId" resultMap="SeasonRowMap">
+        SELECT
+            id,
+            year,
+            name,
+            start_date,
+            end_date,
+            is_current
+        FROM seasons
+        WHERE team_id = #{teamId}
+        ORDER BY year DESC, id DESC
+        LIMIT 1
+    </select>
+
+    <select id="findSummaryRecordBySeasonId" resultMap="SummaryRecordRowMap">
+        SELECT
+            CAST(COUNT(*) AS INTEGER) AS games,
+            COALESCE(SUM(CASE WHEN g.result = 'win' THEN 1 ELSE 0 END), 0)::INTEGER AS wins,
+            COALESCE(SUM(CASE WHEN g.result = 'loss' THEN 1 ELSE 0 END), 0)::INTEGER AS losses,
+            COALESCE(SUM(CASE WHEN g.result = 'draw' THEN 1 ELSE 0 END), 0)::INTEGER AS draws,
+            COALESCE(SUM(COALESCE(g.runs_for, 0)), 0)::INTEGER AS runs_for,
+            COALESCE(SUM(COALESCE(g.runs_against, 0)), 0)::INTEGER AS runs_against
+        FROM games g
+        WHERE g.season_id = #{seasonId}
+          AND g.status = 'completed'
+          AND g.result IN ('win', 'loss', 'draw')
+    </select>
+
+    <select id="findSummaryRecordByTeamId" resultMap="SummaryRecordRowMap">
+        SELECT
+            CAST(COUNT(*) AS INTEGER) AS games,
+            COALESCE(SUM(CASE WHEN g.result = 'win' THEN 1 ELSE 0 END), 0)::INTEGER AS wins,
+            COALESCE(SUM(CASE WHEN g.result = 'loss' THEN 1 ELSE 0 END), 0)::INTEGER AS losses,
+            COALESCE(SUM(CASE WHEN g.result = 'draw' THEN 1 ELSE 0 END), 0)::INTEGER AS draws,
+            COALESCE(SUM(COALESCE(g.runs_for, 0)), 0)::INTEGER AS runs_for,
+            COALESCE(SUM(COALESCE(g.runs_against, 0)), 0)::INTEGER AS runs_against
+        FROM games g
+            JOIN seasons s ON s.id = g.season_id
+        WHERE s.team_id = #{teamId}
+          AND g.status = 'completed'
+          AND g.result IN ('win', 'loss', 'draw')
+    </select>
+
+    <select id="findRecentGamesBySeasonId" resultMap="SummaryGameRowMap">
+        SELECT
+            g.id AS game_id,
+            g.game_date,
+            g.start_time,
+            g.opponent_name,
+            g.status,
+            g.result,
+            g.runs_for,
+            g.runs_against,
+            g.tournament_id,
+            t.name AS tournament_name,
+            g.stadium_id,
+            st.name AS stadium_name,
+            g.venue_name
+        FROM games g
+            LEFT JOIN tournaments t ON t.id = g.tournament_id
+            LEFT JOIN stadiums st ON st.id = g.stadium_id
+        WHERE g.season_id = #{seasonId}
+          AND g.status = 'completed'
+          AND g.result IN ('win', 'loss', 'draw', 'no_game')
+        ORDER BY g.game_date DESC, g.id DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="findUpcomingGamesBySeasonId" resultMap="SummaryGameRowMap">
+        SELECT
+            g.id AS game_id,
+            g.game_date,
+            g.start_time,
+            g.opponent_name,
+            g.status,
+            g.result,
+            g.runs_for,
+            g.runs_against,
+            g.tournament_id,
+            t.name AS tournament_name,
+            g.stadium_id,
+            st.name AS stadium_name,
+            g.venue_name
+        FROM games g
+            LEFT JOIN tournaments t ON t.id = g.tournament_id
+            LEFT JOIN stadiums st ON st.id = g.stadium_id
+        WHERE g.season_id = #{seasonId}
+          AND g.status = 'scheduled'
+        ORDER BY g.game_date ASC, g.id ASC
+        LIMIT #{limit}
+    </select>
+</mapper>

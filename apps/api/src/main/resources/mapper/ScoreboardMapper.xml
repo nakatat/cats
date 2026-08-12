@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dev.baseballscore.cats.api.scoreboard.mapper.ScoreboardMapper">
+
+    <resultMap id="ScoreboardRowMap" type="dev.baseballscore.cats.api.scoreboard.mapper.model.ScoreboardRow">
+        <id column="score_line_id" property="scoreLineId"/>
+        <result column="team_id" property="teamId"/>
+        <result column="team_name" property="teamName"/>
+        <result column="opponent" property="opponent"/>
+        <result column="display_order" property="displayOrder"/>
+        <result column="inning_number" property="inningNumber"/>
+        <result column="inning_runs" property="inningRuns"/>
+        <result column="inning_status" property="inningStatus"/>
+        <result column="runs" property="runs"/>
+        <result column="hits" property="hits"/>
+        <result column="errors" property="errors"/>
+    </resultMap>
+
+    <select id="findScoreboardRowsByGameId" resultMap="ScoreboardRowMap">
+        SELECT
+          gsl.id AS score_line_id,
+          gsl.team_id,
+          gsl.team_name,
+          gsl.is_opponent AS opponent,
+          gsl.display_order,
+          gis.inning_number,
+          gis.runs AS inning_runs,
+          gis.status AS inning_status,
+          gsl.runs,
+          gsl.hits,
+          gsl.errors
+        FROM game_score_lines gsl
+          LEFT JOIN game_inning_scores gis ON gis.score_line_id = gsl.id
+        WHERE gsl.game_id = #{gameId}
+        ORDER BY gsl.display_order ASC, gis.inning_number ASC NULLS LAST, gis.id ASC
+    </select>
+</mapper>

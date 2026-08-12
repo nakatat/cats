@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dev.baseballscore.cats.api.gameparticipant.mapper.GameParticipantMapper">
+
+  <resultMap id="GameParticipantRowMap" type="dev.baseballscore.cats.api.gameparticipant.mapper.model.GameParticipantRow">
+    <id column="game_participant_id" property="gameParticipantId"/>
+    <result column="game_id" property="gameId"/>
+    <result column="player_id" property="playerId"/>
+    <result column="display_name" property="displayName"/>
+    <result column="uniform_number" property="uniformNumber"/>
+    <result column="batting_order" property="battingOrder"/>
+    <result column="position" property="position"/>
+    <result column="is_starter" property="starter"/>
+    <result column="is_guest" property="guest"/>
+  </resultMap>
+
+  <select id="findParticipantsByGameIdAndTeamId" resultMap="GameParticipantRowMap">
+    SELECT
+      gp.id AS game_participant_id,
+      gp.game_id,
+      gp.player_id,
+      gp.display_name,
+      gp.uniform_number,
+      gp.batting_order,
+      gp.position,
+      gp.is_starter,
+      gp.is_guest
+    FROM game_participants gp
+    INNER JOIN games g
+      ON g.id = gp.game_id
+     AND g.team_id = gp.team_id
+    WHERE gp.team_id = #{teamId}
+      AND gp.game_id = #{gameId}
+    ORDER BY gp.batting_order ASC NULLS LAST, gp.id ASC
+  </select>
+</mapper>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dev.baseballscore.cats.api.stadium.mapper.StadiumMapper">
+
+    <resultMap id="StadiumRowMap" type="dev.baseballscore.cats.api.stadium.mapper.model.StadiumRow">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="address" property="address"/>
+        <result column="city" property="city"/>
+        <result column="prefecture" property="prefecture"/>
+        <result column="description" property="description"/>
+    </resultMap>
+
+    <select id="findStadiums" resultMap="StadiumRowMap">
+        SELECT
+            id,
+            name,
+            address,
+            city,
+            prefecture,
+            description
+        FROM stadiums
+        ORDER BY prefecture ASC NULLS LAST, city ASC NULLS LAST, name ASC, id ASC
+    </select>
+
+    <select id="findStadiumById" resultMap="StadiumRowMap">
+        SELECT
+            id,
+            name,
+            address,
+            city,
+            prefecture,
+            description
+        FROM stadiums
+        WHERE id = #{stadiumId}
+    </select>
+</mapper>
