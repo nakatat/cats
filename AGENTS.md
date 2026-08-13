@@ -61,6 +61,7 @@
 - 小さくレビューしやすい差分にし、依頼範囲外の変更を混ぜない
 - コンテナ内でWebのbuild、test、lint、型チェック、依存更新を実行する場合は `vscode` ユーザーを使う
 - Javaの規約・確認方法は `docs/java-coding-style.md`、テスト方針は `docs/test-strategy.md` を参照する
+- `main` は直接変更せず、作業は `fix/<short-description>` または `feature/<short-description>` ブランチで行う。詳細は `docs/git-branch-workflow.md` を参照する
 - Git操作で `.git/index.lock` が失敗した場合は、実在するlockか確認してから必要な環境で再実行する。無条件削除や広範囲の権限変更はしない
 
 ## Documentation map
@@ -74,6 +75,7 @@
 | 公開API・レスポンス・enum・エラー・集計 | `docs/api-design.md` |
 | 将来の管理・入力API候補 | `docs/input-api-design.md` |
 | 現在の実装状況・今後の候補 | `docs/implementation-roadmap.md` |
+| Gitブランチの作成・PR・マージ・削除 | `docs/git-branch-workflow.md` |
 | Java規約・Formatter・確認コマンド | `docs/java-coding-style.md` |
 | テストの種類・優先順位・配置 | `docs/test-strategy.md` |
 | 共通UI・Storybook・Tailwind方針 | `docs/frontend-ui-guidelines.md` |
