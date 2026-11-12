@@ -124,5 +124,6 @@ pnpm --dir apps/web dev
 - [DB設計](docs/database-design.md)
 - [公開API設計](docs/api-design.md)
 - [テスト戦略](docs/test-strategy.md)
+- [Java / Node.js のセキュリティ更新](docs/runtime-security-updates.md)
 - [実装ロードマップ](docs/implementation-roadmap.md)
 - [旧サイト調査（Historical）](docs/old-site-analysis.md)
